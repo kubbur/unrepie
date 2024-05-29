@@ -1,7 +1,3 @@
-# unrepie
-cli interface for managing an unraid server through rpi via a relay hat
-
-=======
 # UnrePie
 
 UnrePie is a tool to manage an Unraid server from a Raspberry Pi with a relay hat.
@@ -22,20 +18,24 @@ source ~/.bashrc
  ```
 replace username with your username
 
-##Usage
+## Usage
 Run the program:
 
 
 unrepie
 
 
-##Features
+## Features
 Hard Power: Control the power relay.
+
 Hard Restart: Control the restart relay.
+
 Soft Restart: Restart the server via SSH.
+
 Soft Power: Power down the server via SSH.
+
 Ping: Monitor the server's ping response times.
 
 
-##Configuration
+## Configuration
 On the first run, you will be prompted to configure the server connection settings. You can update these settings anytime by selecting the "Configure" option.
