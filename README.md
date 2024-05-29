@@ -14,12 +14,12 @@ Clone the repository and install the package:
 git clone https://github.com/kubbur/unrepie.git
 cd unrepie
 pip install .
-
+ ```
 you might want to add the binary folder to path
-
+ ```
 echo 'export PATH=$PATH:/home/username/.local/bin' >> ~/.bashrc
 source ~/.bashrc
-
+ ```
 replace username with your username
 
 ##Usage
