@@ -1,0 +1,7 @@
+
+### requirements.txt
+
+```plaintext
+wiringpi
+paramiko
+pexpect
