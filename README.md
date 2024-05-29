@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # unrepie
 cli interface for managing an unraid server through rpi via a relay hat
 
@@ -15,4 +14,28 @@ Clone the repository and install the package:
 git clone https://github.com/kubbur/unrepie.git
 cd unrepie
 pip install .
->>>>>>> master
+
+you might want to add the binary folder to path
+
+echo 'export PATH=$PATH:/home/username/.local/bin' >> ~/.bashrc
+source ~/.bashrc
+
+replace username with your username
+
+##Usage
+Run the program:
+
+
+unrepie
+
+
+##Features
+Hard Power: Control the power relay.
+Hard Restart: Control the restart relay.
+Soft Restart: Restart the server via SSH.
+Soft Power: Power down the server via SSH.
+Ping: Monitor the server's ping response times.
+
+
+##Configuration
+On the first run, you will be prompted to configure the server connection settings. You can update these settings anytime by selecting the "Configure" option.
