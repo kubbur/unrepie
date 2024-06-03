@@ -1,41 +1,73 @@
-# UnrePie
+# Unrepie
 
-UnrePie is a tool to manage an Unraid server from a Raspberry Pi with a relay hat.
+Unrepie is a Flask application to manage multiple SSH command executors, each with its own configuration.
+
+## Version
+
+1.0
 
 ## Installation
 
-Clone the repository and install the package:
+1. Clone the repository:
 
-```bash
-git clone https://github.com/kubbur/unrepie.git
-cd unrepie
-pip install .
- ```
-you might want to add the binary folder to path
- ```
-echo 'export PATH=$PATH:/home/username/.local/bin' >> ~/.bashrc
-source ~/.bashrc
- ```
-replace username with your username
+    ```sh
+    git clone https://github.com/yourusername/unrepie.git
+    cd unrepie
+    ```
 
-## Usage
-Run the program:
+2. Run the setup script:
 
+    ```sh
+    chmod +x setup.sh
+    ./setup.sh
+    ```
 
-unrepie
+3. Run the application:
 
+    ```sh
+    ./unrepie
+    ```
 
-## Features
-Hard Power: Control the power relay.
+4. Open your browser and navigate to `http://localhost:5000` to access the central management interface.
 
-Hard Restart: Control the restart relay.
+## Adding Unrepie to Startup
 
-Soft Restart: Restart the server via SSH.
+### For Systemd (Linux)
 
-Soft Power: Power down the server via SSH.
+1. Create a systemd service file:
 
-Ping: Monitor the server's ping response times.
+    ```sh
+    sudo nano /etc/systemd/system/unrepie.service
+    ```
 
+2. Add the following content:
 
-## Configuration
-On the first run, you will be prompted to configure the server connection settings. You can update these settings anytime by selecting the "Configure" option.
+    ```ini
+    [Unit]
+    Description=Unrepie Service
+    After=network.target
+
+    [Service]
+    ExecStart=/path/to/unrepie/unrepie
+    WorkingDirectory=/path/to/unrepie
+    User=yourusername
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    Replace `/path/to/unrepie` with the actual path to the Unrepie directory and `yourusername` with your username.
+
+3. Enable and start the service:
+
+    ```sh
+    sudo systemctl enable unrepie
+    sudo systemctl start unrepie
+    ```
+
+## Dependencies
+
+- Flask
+- paramiko
+- ping3

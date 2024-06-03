@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ instance_name }} - Unrepie</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <style>
+        .btn-edit {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .btn-command {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .d-flex.justify-content-between.align-items-center > * {
+            flex-grow: 1;
+        }
+        .d-flex.justify-content-between.align-items-center > .btn-edit {
+            flex-grow: 0;
+            margin-left: 10px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        function confirmExecution(event) {
+            const form = event.target.closest('form');
+            const checkbox = form.querySelector('input[name="confirm"]');
+            if (checkbox && checkbox.checked) {
+                if (!confirm('Are you sure you want to execute this command?')) {
+                    event.preventDefault();
+                }
+            }
+        }
+
+        function toggleEdit(index) {
+            const buttonContainer = document.getElementById(`button-container-${index}`);
+            const editContainer = document.getElementById(`edit-container-${index}`);
+            buttonContainer.classList.toggle('d-none');
+            editContainer.classList.toggle('d-none');
+        }
+
+        function toggleAddButtonForm() {
+            const addButtonForm = document.getElementById('add-button-form');
+            addButtonForm.classList.toggle('d-none');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.execute-button').forEach(button => {
+                button.addEventListener('click', confirmExecution);
+            });
+            updatePingDisplay();
+        });
+
+        // Ping tool functionality
+        let pingResults = {{ ping_results|tojson }};
+        let lastResponseTime = null;
+
+        function updatePingDisplay() {
+            const pingContainer = document.getElementById('ping-container');
+            pingContainer.innerHTML = '';
+            pingResults.forEach(result => {
+                const div = document.createElement('div');
+                div.textContent = `${result.timestamp} - ${result.success ? 'Success' : 'Failed'}`;
+                pingContainer.appendChild(div);
+            });
+            const lastResponseDiv = document.getElementById('last-response');
+            if (pingResults.length > 0) {
+                lastResponseTime = pingResults[pingResults.length - 1].timestamp;
+                lastResponseDiv.textContent = `Last response at: ${lastResponseTime}`;
+            }
+        }
+
+        function pingServer() {
+            fetch('/instance/{{ instance_name }}/ping')
+                .then(response => response.json())
+                .then(data => {
+                    const timestamp = new Date().toLocaleString();
+                    pingResults.push({
+                        timestamp: timestamp,
+                        success: data.success
+                    });
+                    if (data.success) {
+                        lastResponseTime = timestamp;
+                    }
+                    if (pingResults.length > 5) {
+                        pingResults.shift();
+                    }
+                    updatePingDisplay();
+                })
+                .catch(error => {
+                    const timestamp = new Date().toLocaleString();
+                    pingResults.push({
+                        timestamp: timestamp,
+                        success: false
+                    });
+                    if (pingResults.length > 5) {
+                        pingResults.shift();
+                    }
+                    updatePingDisplay();
+                });
+        }
+
+        setInterval(pingServer, 1000);
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <a href="/" class="btn btn-secondary mb-3">Back to Central Management</a>
+        <h2 class="mt-5 text-center">{{ instance_name }}</h2>
+
+        {% if not config %}
+        <form method="POST" action="/instance/{{ instance_name }}/setup">
+            <div class="form-group">
+                <label for="host">Host:</label>
+                <input type="text" id="host" name="host" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="port">Port:</label>
+                <input type="text" id="port" name="port" class="form-control" value="22" required>
+            </div>
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Setup</button>
+        </form>
+        {% else %}
+        
+        <div class="list-group">
+            {% for button in buttons %}
+            <div class="list-group-item d-flex justify-content-between align-items-center" id="button-container-{{ loop.index0 }}">
+                <form method="POST" action="/instance/{{ instance_name }}/execute" class="d-flex flex-grow-1">
+                    <input type="hidden" name="command" value="{{ button.command }}">
+                    <input type="checkbox" name="confirm" class="form-check-input" {% if button.confirm %}checked{% endif %} style="display:none;">
+                    <button type="submit" class="btn btn-success execute-button btn-command">{{ button.name }}</button>
+                </form>
+                <button class="btn btn-warning btn-edit" onclick="toggleEdit({{ loop.index0 }})">Edit</button>
+            </div>
+            <div id="edit-container-{{ loop.index0 }}" class="d-none mt-3">
+                <form method="POST" action="/instance/{{ instance_name }}/edit_button/{{ loop.index0 }}" class="d-inline">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" class="form-control" value="{{ button.name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="command">Command:</label>
+                        <input type="text" id="command" name="command" class="form-control" value="{{ button.command }}" required>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="confirm-edit-{{ loop.index0 }}" name="confirm" class="form-check-input" {% if button.confirm %}checked{% endif %}>
+                        <label for="confirm-edit-{{ loop.index0 }}" class="form-check-label">Confirm execution</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Save</button>
+                    <button type="button" class="btn btn-secondary btn-block mt-2" onclick="toggleEdit({{ loop.index0 }})">Cancel</button>
+                </form>
+                <form method="POST" action="/instance/{{ instance_name }}/delete_button/{{ loop.index0 }}" class="d-inline mt-2">
+                    <button type="submit" class="btn btn-danger btn-block">Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button class="btn btn-primary btn-block mt-3" onclick="toggleAddButtonForm()">Add New Button</button>
+        <div id="add-button-form" class="d-none mt-3">
+            <h2 class="text-center">Add New Button</h2>
+            <form method="POST" action="/instance/{{ instance_name }}/add_button">
+                <div class="form-group">
+                    <label for="name">Button Name:</label>
+                    <input type="text" id="name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="command">Command:</label>
+                    <input type="text" id="command" name="command" class="form-control" required>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="confirm" name="confirm" class="form-check-input">
+                    <label for="confirm" class="form-check-label">Confirm execution</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Add Button</button>
+            </form>
+        </div>
+
+        <h2 class="mt-5 text-center">Ping Results</h2>
+        <div id="ping-container"></div>
+        <div id="last-response"></div>
+
+        {% if output %}
+        <h2 class="mt-5 text-center">Output:</h2>
+        <pre>{{ output }}</pre>
+        {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
+
